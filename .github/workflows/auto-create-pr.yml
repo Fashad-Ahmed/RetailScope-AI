@@ -1,0 +1,58 @@
+name: Auto Create PR
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  create-pr:
+    name: Create PR for new branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get default branch
+        id: default
+        run: |
+          default=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+          echo "branch=$default" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip if default branch
+        id: skip
+        run: |
+          current="${GITHUB_REF#refs/heads/}"
+          echo "current=$current" >> $GITHUB_OUTPUT
+          if [ "$current" = "${{ steps.default.outputs.branch }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          branch="${GITHUB_REF#refs/heads/}"
+          if gh pr view --head "$branch" 2>/dev/null; then
+            echo "PR already exists for this branch, skipping."
+            exit 0
+          fi
+          title=$(git log -1 --pretty=format:"%s")
+          body=$(git log -1 --pretty=format:"%b")
+          if [ -z "$body" ]; then
+            body="Auto-created PR for branch \`$branch\`."
+          fi
+          gh pr create \
+            --base "${{ steps.default.outputs.branch }}" \
+            --head "$branch" \
+            --title "$title" \
+            --body "$body"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
