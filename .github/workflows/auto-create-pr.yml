@@ -37,13 +37,16 @@ jobs:
           fi
 
       - name: Create PR
+        id: create-pr
         if: steps.skip.outputs.skip == 'false'
         run: |
           branch="${GITHUB_REF#refs/heads/}"
           if gh pr view --head "$branch" 2>/dev/null; then
-            echo "PR already exists for this branch, skipping."
+            echo "pr_exists=true" >> $GITHUB_OUTPUT
+            echo "PR already exists for this branch, skipping create."
             exit 0
           fi
+          echo "pr_exists=false" >> $GITHUB_OUTPUT
           title=$(git log -1 --pretty=format:"%s")
           body=$(git log -1 --pretty=format:"%b")
           if [ -z "$body" ]; then
@@ -56,3 +59,11 @@ jobs:
             --body "$body"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Run reviewdog (Ruff) on PR
+        if: steps.skip.outputs.skip == 'false'
+        uses: benny123tw/action-ruff@v1
+        with:
+          github_token: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_level: warning
