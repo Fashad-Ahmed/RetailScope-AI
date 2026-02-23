@@ -23,7 +23,7 @@ jobs:
           default=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
           echo "branch=$default" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Skip if default branch
         id: skip
@@ -55,4 +55,4 @@ jobs:
             --title "$title" \
             --body "$body"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN != '' && secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
