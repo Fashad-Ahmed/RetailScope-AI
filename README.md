@@ -269,6 +269,13 @@ RetailScope AI enables:
 
 ---
 
+## CI & PR review
+
+* **GitHub Action** ( [`.github/workflows/pr-review.yml`](.github/workflows/pr-review.yml) ) runs on every **pull request**—when you open a PR or push new commits to the PR branch.
+* **Reviewdog** (free, open-source) posts automated review comments on the PR using **Ruff** for Python linting. No extra setup required; it uses the default `GITHUB_TOKEN`.
+
+---
+
 <!-- ## Future Improvements
 
 * Model monitoring and drift detection
