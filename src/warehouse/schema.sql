@@ -34,3 +34,20 @@ CREATE TABLE IF NOT EXISTS fact_sales (
     FOREIGN KEY (stock_code) REFERENCES dim_product(stock_code),
     FOREIGN KEY (invoice_date) REFERENCES dim_date(date)
 );
+
+
+
+
+DROP TABLE IF EXISTS fact_sales;
+
+CREATE TABLE fact_sales (
+  invoice_no TEXT,
+  invoice_date DATE,
+  stock_code TEXT,
+  description TEXT,
+  quantity INT,
+  unit_price DOUBLE PRECISION,
+  customer_id BIGINT,
+  country TEXT,
+  total_amount DOUBLE PRECISION
+);
