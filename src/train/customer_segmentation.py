@@ -68,7 +68,6 @@ def main():
     plt.show()
 
     best_k = k_values[silhouette.index(max(silhouette))]
-
     print("Best K:", best_k)
 
     final_model = KMeans(
@@ -79,6 +78,18 @@ def main():
 
     df["segment"] = final_model.fit_predict(X)
 
+    profile = df.groupby("segment").agg({
+        "recency": "mean",
+        "frequency": "mean",
+        "monetary": "mean",
+        "customer_id": "count"
+    }).rename(columns={"customer_id": "num_customers"})
+
+    print("\nCluster Profile:\n", profile)
+
+    profile_scaled = (profile - profile.min()) / (profile.max() - profile.min())
+    print("\nNormalized Profile:\n", profile_scaled)
+
     df[["customer_id", "segment"]].to_sql(
         "mart_customer_segments",
         engine,
@@ -86,7 +97,13 @@ def main():
         index=False
     )
 
-    print("Segments stored in mart_customer_segments")
+    profile.reset_index().to_sql(
+        "mart_customer_segment_profile",
+        engine,
+        if_exists="replace",
+        index=False
+    )
 
+    print("Segments + profiles stored successfully")
 if __name__ == "__main__":
     main()
