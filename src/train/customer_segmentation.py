@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import numpy as np
 
 import pandas as pd
 from sqlalchemy import create_engine
@@ -8,6 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 
+# Load environment variables
 try:
     from dotenv import load_dotenv
     _root = Path(__file__).resolve().parent.parent.parent
@@ -17,8 +19,8 @@ except ImportError:
 
 DB_URL = os.getenv("DB_URL")
 
-def main():
 
+def main():
     engine = create_engine(DB_URL)
 
     query = """
@@ -27,6 +29,11 @@ def main():
     """
 
     df = pd.read_sql(query, engine)
+
+    print("Loaded data shape:", df.shape)
+
+    df["monetary"] = np.log1p(df["monetary"])
+    df["frequency"] = np.log1p(df["frequency"])
 
     features = df[["recency", "frequency", "monetary"]]
 
@@ -38,8 +45,9 @@ def main():
     inertia = []
     silhouette = []
 
-    for k in k_values:
+    print("\nEvaluating K values...\n")
 
+    for k in k_values:
         model = KMeans(
             n_clusters=k,
             random_state=42,
@@ -49,9 +57,11 @@ def main():
         labels = model.fit_predict(X)
 
         inertia.append(model.inertia_)
-        silhouette.append(silhouette_score(X, labels))
+        score = silhouette_score(X, labels)
+        silhouette.append(score)
 
-        print(f"K={k}, inertia={model.inertia_:.2f}, silhouette={silhouette[-1]:.3f}")
+        print(f"K={k}, inertia={model.inertia_:.2f}, silhouette={score:.3f}")
+
 
     plt.figure()
     plt.plot(k_values, inertia, marker="o")
@@ -68,7 +78,10 @@ def main():
     plt.show()
 
     best_k = k_values[silhouette.index(max(silhouette))]
-    print("Best K:", best_k)
+    print("\nBest K (auto):", best_k)
+
+    best_k = 4
+    print("Final K used:", best_k)
 
     final_model = KMeans(
         n_clusters=best_k,
@@ -77,6 +90,10 @@ def main():
     )
 
     df["segment"] = final_model.fit_predict(X)
+
+
+    print("\nSegment Distribution:\n")
+    print(df["segment"].value_counts())
 
     profile = df.groupby("segment").agg({
         "recency": "mean",
@@ -104,6 +121,8 @@ def main():
         index=False
     )
 
-    print("Segments + profiles stored successfully")
+    print("\nSegments + profiles stored successfully")
+
+
 if __name__ == "__main__":
     main()
