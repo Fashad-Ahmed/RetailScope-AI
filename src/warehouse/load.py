@@ -1,8 +1,20 @@
 from pathlib import Path
+import os
+
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-DB_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/retaildw"
+try:
+    from dotenv import load_dotenv
+    _root = Path(__file__).resolve().parent.parent.parent
+    load_dotenv(_root / ".env")
+except ImportError:
+    pass
+
+DB_URL = os.getenv("DB_URL")
+if not DB_URL:
+    raise ValueError("DB_URL environment variable is required (e.g. in .env)")
+
 PARQUET_PATH = Path("data/clean/transactions.parquet")
 
 def main():
