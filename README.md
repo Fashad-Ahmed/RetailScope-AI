@@ -2,9 +2,6 @@
 
 # RetailScope AI
 
-
-### Note: The project is in progress 😊
-
 ## End to End Retail Intelligence Platform with Data Warehouse, Advanced Machine Learning, and Time-Series Forecasting
 
 RetailScope AI is a production-oriented retail analytics platform designed to simulate a real-world decision intelligence system. The project integrates modern data engineering practices with classical and advanced machine learning techniques to extract actionable business insights from large-scale transactional retail data.
